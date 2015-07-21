@@ -1754,6 +1754,26 @@ class BibTeXFilter:
             typ, msg = self.__canonicalize(text)
             return (typ, m.group(3), int(m.group(2)), msg)
 
+        # biber type errors
+        #if match('^.*> INFO - (.*)$'):
+        #    if not m.group(1).startswith("WARNINGS: "):
+        #        if not m.group(1).startswith("ERRORS: "):
+        #            print ('info', None, None, m.group(1))
+        #            return ('info', None, None, m.group(1))
+
+        if match('^.*> WARN - (.*)$'):
+            print ('warning', None, None, m.group(1))
+            m2 = re.match("(.*) in file '(.*?)', skipping ...", m.group(1))
+            if m2:
+                return ('warning', m2.group(2), "0", m2.group(1))
+            return ('warning', None, None, m.group(1))
+
+        if match('^.*> ERROR - (.*)$'):
+            m2 = re.match("BibTeX subsystem: (.*?), line (\d+), (.*)$", m.group(1))
+            if m2:
+                return ('error', m2.group(1), m2.group(2), m2.group(3))
+            return ('error', None, None, m.group(1))
+
         # overflow/print_overflow
         if match('Sorry---you\'ve exceeded BibTeX\'s (.*)'):
             return ('error', None, None, 'capacity exceeded: ' + m.group(1))
